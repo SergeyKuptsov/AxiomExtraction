@@ -23,9 +23,14 @@ object Main extends App {
        df.show
     val selectedData = df.select("s", "p", "o").where("p == 'friendOf' OR p == 'hates'")
     val distinctValuesDF = df.select("p").distinct
+    val distinctSubjectsDF = df.select("s").distinct
+    val distinctObjectsDF = df.select("o").distinct
     selectedData.show()
     distinctValuesDF.show()
+    val instances = distinctSubjectsDF.union(distinctObjectsDF).distinct()
     distinctValuesDF.select("p").take((distinctValuesDF.count()).toInt).foreach(printWithNeg)
+    
+    instances.show()
 
   }
 
@@ -35,8 +40,7 @@ object Main extends App {
 	}
 	
 	def printWithNeg(x:Any) {
-	  Console.println(x)
-	  
+	  Console.println(x)	  
 	  Console.println("[not_"+x.toString().takeRight(x.toString().length()-1))
 	}
 }
