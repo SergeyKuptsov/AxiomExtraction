@@ -22,13 +22,22 @@ object Main extends App {
      val df: DataFrame = spark.read.rdf(Lang.NTRIPLES)(path)
        df.show
     val selectedData = df.select("s", "p", "o").where("p == 'friendOf' OR p == 'hates'")
+    val distinctValuesDF = df.select("p").distinct
     selectedData.show()
-    
+    distinctValuesDF.show()
+    distinctValuesDF.select("p").take((distinctValuesDF.count()).toInt).foreach(printWithNeg)
+
   }
 
 	def debug(out: String) {
 	   if (DEBUG)
 	      println(out)
+	}
+	
+	def printWithNeg(x:Any) {
+	  Console.println(x)
+	  
+	  Console.println("[not_"+x.toString().takeRight(x.toString().length()-1))
 	}
 }
 
