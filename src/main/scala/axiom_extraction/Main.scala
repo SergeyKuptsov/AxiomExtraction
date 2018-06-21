@@ -4,10 +4,14 @@ package axiom_extraction
 import net.sansa_stack.rdf.spark.io._
 import org.apache.spark.sql.SparkSession
 import org.apache.jena.riot.Lang
+import org.apache.spark.rdd._
 import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import scala.collection.mutable.ListBuffer
 import org.apache.spark.sql.functions._
+import org.apache.spark.ml.fpm.FPGrowth
+
+
 object Main extends App {
 
   var DEBUG: Boolean = false
@@ -21,8 +25,10 @@ object Main extends App {
     val resource = "test_input.nt"
     val path = getClass.getResource(resource).getPath()
     val df: DataFrame = spark.read.rdf(Lang.NTRIPLES)(path)
+    Console.println("===========Input DataFrames===========")
     df.show()
     
+    Console.println("===========Predicates===========")
     //selecting all distinct predicates
     val distinctValuesDF = df.select("p").distinct
     //selecting all distinct instances
@@ -38,16 +44,36 @@ object Main extends App {
     
     var transactions : ListBuffer [String] = new ListBuffer()
     
+    
+    Console.println("===========Extendet Predicates===========")
     //printing out distinct predicate values
     distinctValuesDF.select("p").take((distinctValuesDF.count()).toInt).foreach(printWithNeg)    
     
     //sampling the pair groups
     instances.foreach {x => getInstanceFilter(x,df,dfList)}
     
-    
+    Console.println("===========Transactions Extracted===========")
     //extracting pairs and generating transactions
     dfList.foreach(x=>transactions += extractTransactions(x))
     transactions.foreach(println)
+    
+    import spark.implicits._
+    val dataset = spark.createDataset(transactions).map(t => t.split(" ")).toDF("items")
+    
+    
+    val fpgrowth = new FPGrowth().setItemsCol("items").setMinSupport(0.5).setMinConfidence(0.8)
+    val model = fpgrowth.fit(dataset)
+    
+    Console.println("===========Frequent Items===========")
+    // Display frequent itemsets.
+    model.freqItemsets.show()
+    
+    // Display generated association rules.
+    Console.println("===========Association Rules===========")
+    model.associationRules.show()
+   
+    
+        
   }
 
 	def debug(out: String) {
@@ -67,11 +93,11 @@ object Main extends App {
     var currObject: String = ""                        
     count = df.count().toInt         
     currObject = df.sort("o").first()(2).toString()
-    outString = "(" + df.sort("o").first()(0).toString() + ":" + df.sort("o").first()(2).toString() + ") -> "
+    //outString = "(" + df.sort("o").first()(0).toString() + ":" + df.sort("o").first()(2).toString() + ") -> "
     df.sort("o").collect.foreach{ x=>
                     	    {                           	  
-                    	      outString += x(1) +","
-                    	      outString += "not_"+x(1).toString() +","            	    
+                    	      outString += x(1) +" "
+                    	      outString += "not_"+x(1).toString() +" "            	    
                     	    }  
                     	   
                          }

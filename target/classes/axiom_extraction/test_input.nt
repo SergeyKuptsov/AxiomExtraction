@@ -10,3 +10,9 @@
 <b><friendOf><c>.
 <b><friendOf><d>.
 <f><friendOf><c>.
+<a><sees><b>.
+<b><sees><a>.
+<a><sees><c>.
+<c><sees><a>.
+<b><sees><c>.
+<c><sees><b>.
