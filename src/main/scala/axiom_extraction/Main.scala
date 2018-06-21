@@ -46,7 +46,7 @@ object Main extends App {
     
     
     //extracting pairs and generating transactions
-    dfList.foreach(x=>extractTransactions(x,transactions))
+    dfList.foreach(x=>transactions += extractTransactions(x))
     transactions.foreach(println)
   }
 
@@ -60,7 +60,7 @@ object Main extends App {
 	  Console.println("[not_"+x.toString().takeRight(x.toString().length()-1))
 	}
 	
-	def extractTransactions(df :DataFrame,transactions :ListBuffer[String]) {
+	def extractTransactions(df :DataFrame): String = {
 	  var count:Int = 0
 	  var transactions : ListBuffer[String] = new ListBuffer[String]
     var outString: String = ""
@@ -68,17 +68,14 @@ object Main extends App {
     count = df.count().toInt         
     currObject = df.sort("o").first()(2).toString()
     outString = "(" + df.sort("o").first()(0).toString() + ":" + df.sort("o").first()(2).toString() + ") -> "
-    df.sort("o").foreach{ x=>
-              	    { Console.println(x.toString())
-            	                                    	  
-              	      outString += x(1) +","
-              	      outString += "not_"+x(1).toString() +"," 
-              	      Console.println(outString)              	    }  
-              	   
-      }
-	   transactions.append(outString.take(outString.length()-1))
-     Console.println("TR Size: " + transactions.size.toString())       	   
-     Console.println("===================================================")              
+    df.sort("o").collect.foreach{ x=>
+                    	    {                           	  
+                    	      outString += x(1) +","
+                    	      outString += "not_"+x(1).toString() +","            	    
+                    	    }  
+                    	   
+                         }
+     return outString.take(outString.length()-1)
 	  }
 	
 	
