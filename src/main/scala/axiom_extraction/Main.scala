@@ -10,6 +10,8 @@ import org.apache.spark.{SparkConf, SparkContext}
 import scala.collection.mutable.ListBuffer
 import org.apache.spark.sql.functions._
 import org.apache.spark.ml.fpm.FPGrowth
+import net.sansa_stack.rdf.spark.model._
+import org.apache.jena.graph.NodeFactory
 
 
 object Main extends App {
@@ -24,16 +26,17 @@ object Main extends App {
       .getOrCreate()
     val resource = "test_input.nt"
     val path = getClass.getResource(resource).getPath()
-    val df: DataFrame = spark.read.rdf(Lang.NTRIPLES)(path)
+    val lang: Lang = Lang.NTRIPLES
+    
+    val df = spark.read.rdf(lang)(path)
     Console.println("===========Input DataFrames===========")
     df.show()
-    
     Console.println("===========Predicates===========")
     //selecting all distinct predicates
-    val distinctValuesDF = df.select("p").distinct
+    val distinctValuesDF = df.getPredicates().distinct
     //selecting all distinct instances
-    val distinctSubjectsDF = df.select("s").distinct
-    val distinctObjectsDF = df.select("o").distinct
+    val distinctSubjectsDF = df.getSubjects().distinct
+    val distinctObjectsDF = df.getObjects().distinct
     distinctValuesDF.show()
     
     //all distinct instances in a list
@@ -47,7 +50,7 @@ object Main extends App {
     
     Console.println("===========Extendet Predicates===========")
     //printing out distinct predicate values
-    distinctValuesDF.select("p").take((distinctValuesDF.count()).toInt).foreach(printWithNeg)    
+    distinctValuesDF.getPredicates().take((distinctValuesDF.count()).toInt).foreach(printWithNeg)    
     
     //sampling the pair groups
     instances.foreach {x => getInstanceFilter(x,df,dfList)}
