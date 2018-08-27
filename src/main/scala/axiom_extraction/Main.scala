@@ -70,6 +70,7 @@ object Main extends App {
     // Display generated association rules.
     Console.println("===========Association Rules Symmetry===========")
     model.associationRules.show()
+    extractSymmetryAxiom(model.associationRules)
     
     transactions.clear()
     Console.println("===========Transactions Extracted Subsumption and Disj===========")
@@ -91,8 +92,8 @@ object Main extends App {
     // Display generated association rules.
     Console.println("===========Association Rules  Subsumption and Disj===========")
     modelSub.associationRules.show()
+    extractSubsumptionDisjointnessAxiom(modelSub.associationRules)
    
-    
         
   }
 
@@ -120,6 +121,23 @@ object Main extends App {
      return outString.take(outString.length()-1)
 	  }
 	
+		def extractSymmetryAxiom(df :DataFrame) {  
+    df.collect.foreach{ x=>
+                    	    {                           	  
+                    	      val ant: Seq[String] = x.getAs[Seq[String]]("antecedent")	  
+                    	      val con: Seq[String] = x.getAs[Seq[String]]("consequent")
+                    	      if(ant.size==1 && con.size==1)
+                    	      {
+                    	        val axiom: String = ant(0)
+                    	        if(con.contains(axiom+"^"))
+                    	        {
+                    	          Console.println("Sym("+axiom+")")
+                    	        }
+                    	      }
+                    	    }  
+                }
+	  }
+	
 	def extractTransactionsSubsumptionAndDisjointnessAxiom(df :DataFrame , predicates: DataFrame): String = {
 	  
 	  var count:Int = 0
@@ -142,6 +160,27 @@ object Main extends App {
 	    }
 	  })
 	   return outString.take(outString.length()-1)
+	  }
+	
+			def extractSubsumptionDisjointnessAxiom(df :DataFrame) {  
+    df.collect.foreach{ x=>
+                    	    {                           	  
+                    	      val ant: Seq[String] = x.getAs[Seq[String]]("antecedent")	  
+                    	      val con: Seq[String] = x.getAs[Seq[String]]("consequent")
+                    	      if(ant.size==1 && con.size==1)
+                    	      {
+                    	        val axiom: String = ant(0)
+                    	        if(con(0).contains("not_"))
+                    	        {
+                    	          Console.println("Disj("+axiom+","+con(0).replace("not_","")+")")
+                    	        }
+                    	        else
+                    	        {
+                    	          Console.println("Subsumes("+axiom+","+con(0)+")")
+                    	        }
+                    	      }
+                    	    }  
+                }
 	  }
 	
 	
